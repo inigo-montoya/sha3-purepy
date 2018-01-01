@@ -43,8 +43,7 @@ def rol(x, s):
 
 
 class Keccak(object):
-  """The Keccak-F[1600] permutation."""
-
+  
   def __init__(self) :
     self.state = np.zeros(25, dtype=np.uint64)
 
