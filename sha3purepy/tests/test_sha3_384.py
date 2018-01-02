@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # test_sha3_384.py
 
-import pytest
 from sha3purepy import Sha3PurePy
 
 def test_sha3_384_abc(abc):

@@ -1,8 +1,10 @@
-from __future__ import division, print_function
+# -*- coding: utf-8 -*-
+# keccak.py
 
-from base64 import urlsafe_b64encode
-from binascii import hexlify
+from __future__ import division, print_function
 from functools import partial
+from sha3 import Sha3
+from shake import Shake
 
 import numpy as np
 
@@ -91,103 +93,6 @@ class Keccak(object):
                 ' '.join('{:016x}'.format(state[x + y]).replace('0', '-')
                          for y in range(5)))
         return '\n'.join(lines)
-
-
-class KeccakHash(object):
-
-    def __init__(self, b='', rate=None, dsbyte=None):
-        if rate < 0 or rate > 199:
-            raise Exception("Invalid rate.")
-        self.rate, self.dsbyte, self.i = rate, dsbyte, 0
-        self.k = Keccak()
-        self.buf = np.zeros(200, dtype=np.uint8)
-        self.absorb(b)
-        self.direction = _SPONGE_ABSORBING
-
-    def absorb(self, b):
-        todo = len(b)
-        i = 0
-        while todo > 0:
-            cando = self.rate - self.i
-            willabsorb = min(cando, todo)
-            self.buf[self.i:self.i + willabsorb] ^= \
-                np.frombuffer(b[i:i + willabsorb], dtype=np.uint8)
-            self.i += willabsorb
-            if self.i == self.rate:
-                self.permute()
-            todo -= willabsorb
-            i += willabsorb
-
-    def squeeze(self, n):
-        tosqueeze = n
-        b = b''
-        while tosqueeze > 0:
-            cansqueeze = self.rate - self.i
-            willsqueeze = min(cansqueeze, tosqueeze)
-            b += self.k.state.view(
-                dtype=np.uint8)[
-                self.i:self.i +
-                willsqueeze].tostring()
-            self.i += willsqueeze
-            if self.i == self.rate:
-                self.permute()
-            tosqueeze -= willsqueeze
-        return b
-
-    def pad(self):
-        self.buf[self.i] ^= self.dsbyte
-        self.buf[self.rate - 1] ^= 0x80
-        self.permute()
-
-    def permute(self):
-        self.k.state ^= self.buf.view(dtype=np.uint64)
-        self.k.F1600()
-        self.i = 0
-        self.buf[:] = 0
-
-    def update(self, b):
-        if self.direction == _SPONGE_SQUEEZING:
-            self.permute()
-            self.direction == _SPONGE_ABSORBING
-        self.absorb(b)
-        return self
-
-    def __repr__(self):
-        return "KeccakHash(rate={}, dsbyte=0x{:02x})".format(
-            self.rate, self.dsbyte)
-
-
-class Sha3(KeccakHash):
-
-    """An SHA-3 fixed-output-length function."""
-
-    def digest(self):
-        if self.direction == _SPONGE_ABSORBING:
-            self.pad()
-        return self.squeeze((200 - self.rate) // 2)
-
-    def hexdigest(self):
-        return hexlify(self.digest())
-
-    def b64digest(self):
-        return urlsafe_b64encode(self.digest())
-
-
-class Shake(KeccakHash):
-
-    """A SHAKE variable-output-length function."""
-
-    def digest(self, n
-               ):
-        if self.direction == _SPONGE_ABSORBING:
-            self.pad()
-        return self.squeeze(n)
-
-    def hexdigest(self, n):
-        return hexlify(self.digest(n))
-
-    def b64digest(self, n):
-        return urlsafe_b64encode(self.digest(n))
 
 
 Sha3_224 = partial(Sha3, rate=200 - (448 // 8), dsbyte=0x06)
