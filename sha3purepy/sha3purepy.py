@@ -19,6 +19,7 @@
 
 import keccak
 
+
 class Sha3PurePy:
     """Wrapper class for ease of use and naming
     """
@@ -32,7 +33,6 @@ class Sha3PurePy:
         """
         return keccak.Sha3_224(data)
 
-
     @staticmethod
     def sha3_256(data=None):
         """
@@ -43,7 +43,6 @@ class Sha3PurePy:
         """
         return keccak.Sha3_256(data)
 
-
     @staticmethod
     def sha3_384(data=None):
         """
@@ -53,7 +52,6 @@ class Sha3PurePy:
         :return: Keccack object
         """
         return keccak.Sha3_384(data)
-
 
     @staticmethod
     def sha3_512(data=None):
