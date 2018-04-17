@@ -1,4 +1,7 @@
+from keccak import Keccak
 
+_SPONGE_ABSORBING = 1
+_SPONGE_SQUEEZING = 2
 
 class KeccakHash(object):
 
